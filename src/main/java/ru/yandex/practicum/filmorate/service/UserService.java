@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -29,6 +30,7 @@ public class UserService {
     }
 
     public User update(User user) {
+        getById(user.getId());
         return userStorage.update(user);
     }
 
@@ -40,6 +42,7 @@ public class UserService {
     }
 
     public void addFriend(long id, long friendId) {
+        checkDifferent(id, friendId);
         User user = getById(id);
         User friend = getById(friendId);
         user.getFriends().add(friendId);
@@ -48,6 +51,7 @@ public class UserService {
     }
 
     public void removeFriend(long id, long friendId) {
+        checkDifferent(id, friendId);
         User user = getById(id);
         User friend = getById(friendId);
         user.getFriends().remove(friendId);
@@ -62,11 +66,19 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(long id, long otherId) {
+        checkDifferent(id, otherId);
         User user = getById(id);
         User other = getById(otherId);
         return user.getFriends().stream()
                 .filter(other.getFriends()::contains)
                 .map(this::getById)
                 .toList();
+    }
+
+    private void checkDifferent(long id, long otherId) {
+        if (id == otherId) {
+            log.warn("Передан один и тот же пользователь: {}", id);
+            throw new ValidationException("Должны быть указаны разные пользователи");
+        }
     }
 }

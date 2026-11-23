@@ -27,10 +27,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (!users.containsKey(user.getId())) {
-            log.warn("Пользователь с id = {} не найден", user.getId());
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
         users.put(user.getId(), user);
         log.info("Обновлён пользователь: {}", user);
         return user;

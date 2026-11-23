@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +33,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        getById(film.getId());
         return filmStorage.update(film);
     }
 
@@ -58,10 +59,11 @@ public class FilmService {
     }
 
     public List<Film> getPopular(int count) {
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(count)
-                .toList();
+        if (count <= 0) {
+            log.warn("Некорректное значение count = {}", count);
+            throw new ValidationException("Параметр count должен быть больше нуля");
+        }
+        return filmStorage.getPopular(count);
     }
 
     private void checkUserExists(long userId) {
